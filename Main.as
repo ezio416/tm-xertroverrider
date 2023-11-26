@@ -43,6 +43,7 @@ void Main() {
                 aho = false;
             ahoVersion = version;
         }
+
         ahoAlreadySafe = IsGameVersionSafe_AutoHideOpponents();
     } catch {
         print(getExceptionInfo());
@@ -57,6 +58,7 @@ void Main() {
                 gpp = false;
             gppVersion = version;
         }
+
         gppAlreadySafe = IsGameVersionSafe_GhostsPP();
     } catch {
         print(getExceptionInfo());
@@ -92,6 +94,7 @@ void Render() {
         UI::TextWrapped("XertroV makes some plugins that require manual review before they work on a new game version. This is smart, but it could be annoying if you feel comfortable taking risks. Below are the plugins you have installed which do this.");
         UI::TextWrapped("If a plugin's name is green, that means it is already safe to run on the current game version.");
         UI::Dummy(sizeDummy);
+
         remember = UI::Checkbox("Remember choices (unsafe)", remember);
         if (!remember) {
             if (aho && ahoOverridden)
@@ -106,6 +109,7 @@ void Render() {
 #if DEPENDENCY_AUTOHIDEOPPONENTS
         UI::Separator();
         UI::Text((ahoAlreadySafe ? "\\$0F0" : "") + "Auto-hide Opponents");
+
         try {
             bool ahoSafe = IsGameVersionSafe_AutoHideOpponents();
             if (remember && aho && !ahoSafe && !ahoOverridden) {
@@ -124,6 +128,7 @@ void Render() {
 #if DEPENDENCY_GHOSTS_PP
         UI::Separator();
         UI::Text((gppAlreadySafe ? "\\$0F0" : "") + "Ghosts++");
+
         try {
             bool gppSafe = IsGameVersionSafe_GhostsPP();
             if (remember && gpp && !gppSafe && !gppOverridden) {
@@ -158,6 +163,7 @@ void OverrideGhostsPP(bool safe = true) {
 
 void Reset() {
     trace("resetting...");
+
 #if DEPENDENCY_AUTOHIDEOPPONENTS
     try {
         OverrideAutoHideOpponents(ahoAlreadySafe);
