@@ -4,37 +4,169 @@ m 2023-11-25
 */
 
 [Setting hidden]
-bool ghosts_pp = false;
-bool ghosts_pp_already = ghosts_pp;
+bool aho = false;
 
-string title = "XertroVerrider";
+[Setting hidden]
+string ahoVersion;
+
+[Setting hidden]
+bool gpp = false;
+
+[Setting hidden]
+string gppVersion;
+
+[Setting hidden]
+bool remember = false;
+
+bool ahoAlreadySafe = false;
+bool ahoOverridden  = false;
+
+bool gppAlreadySafe = false;
+bool gppOverridden  = false;
+
+bool safetyPreChecked = false;
+float scale = UI::GetScale();
+vec2 sizeDummy= vec2(100 * scale, 1);
+string title = Icons::Repeat + " XertroVerrider";
 
 [Setting category="General" name="Enabled"]
 bool S_Enabled = true;
+
+void Main() {
+    string version;
+
+#if DEPENDENCY_AUTOHIDEOPPONENTS
+    try {
+        version = Meta::GetPluginFromID("AutohideOpponents").Version;
+        if (ahoVersion != version) {
+            if (!remember)
+                aho = false;
+            ahoVersion = version;
+        }
+        ahoAlreadySafe = IsGameVersionSafe_AutoHideOpponents();
+    } catch {
+        print(getExceptionInfo());
+    }
+#endif
+
+#if DEPENDENCY_GHOSTS_PP
+    try {
+        version = Meta::GetPluginFromID("ghosts-pp").Version;
+        if (gppVersion != version) {
+            if (!remember)
+                gpp = false;
+            gppVersion = version;
+        }
+        gppAlreadySafe = IsGameVersionSafe_GhostsPP();
+    } catch {
+        print(getExceptionInfo());
+    }
+#endif
+
+    safetyPreChecked = true;
+}
+
+void OnDestroyed() { Reset(); }
+void OnDisabled() { Reset(); }
 
 void RenderMenu() {
     if (UI::MenuItem(title, "", S_Enabled))
         S_Enabled = !S_Enabled;
 }
 
-void Main() { }
+#if DEPENDENCY_AUTOHIDEOPPONENTS
+import void OverrideGameSafetyCheck_AutoHideOpponents(bool safe = true) from "AutoHideOpponents";
+import bool IsGameVersionSafe_AutoHideOpponents() from "AutoHideOpponents";
+#endif
 
-import void OverrideGameSafetyCheck_GhostsPP() from "Ghosts_PP";
+#if DEPENDENCY_GHOSTS_PP
+import void OverrideGameSafetyCheck_GhostsPP(bool safe = true) from "Ghosts_PP";
+import bool IsGameVersionSafe_GhostsPP() from "Ghosts_PP";
+#endif
 
 void Render() {
-    if (!S_Enabled)
+    if (!S_Enabled || !safetyPreChecked)
         return;
 
-    UI::Begin(title, S_Enabled, UI::WindowFlags::None);
-        ghosts_pp = UI::Checkbox("Ghosts++ ", ghosts_pp);
-        if (ghosts_pp && !ghosts_pp_already) {
-            try {
-                OverrideGameSafetyCheck_GhostsPP();
-                ghosts_pp_already = true;
-            } catch {
-                print("unbound function");
-                ghosts_pp = false;
-            }
+    UI::Begin(title, S_Enabled, UI::WindowFlags::AlwaysAutoResize);
+        UI::TextWrapped("XertroV makes some plugins that require manual review before they work on a new game version. This is smart, but it could be annoying if you feel comfortable taking risks. Below are the plugins you have installed which do this.");
+        UI::TextWrapped("If a plugin's name is green, that means it is already safe to run on the current game version.");
+        UI::Dummy(sizeDummy);
+        remember = UI::Checkbox("Remember choices (unsafe)", remember);
+        if (!remember) {
+            if (aho && ahoOverridden)
+                aho = false;
+            if (gpp && gppOverridden)
+                gpp = false;
         }
+
+        if (UI::Button("Reset choices"))
+            Reset();
+
+#if DEPENDENCY_AUTOHIDEOPPONENTS
+        UI::Separator();
+        UI::Text((ahoAlreadySafe ? "\\$0F0" : "") + "Auto-hide Opponents");
+        try {
+            bool ahoSafe = IsGameVersionSafe_AutoHideOpponents();
+            if (remember && aho && !ahoSafe && !ahoOverridden) {
+                OverrideAutoHideOpponents();
+                ahoOverridden = true;
+            }
+            if (UI::Button("Run Anyway " + (ahoSafe ? Icons::ToggleOn : Icons::ToggleOff) + "##aho")) {
+                aho = !ahoSafe;
+                OverrideAutoHideOpponents(aho);
+            }
+        } catch {
+            UI::Text("Error: " + getExceptionInfo());
+        }
+#endif
+
+#if DEPENDENCY_GHOSTS_PP
+        UI::Separator();
+        UI::Text((gppAlreadySafe ? "\\$0F0" : "") + "Ghosts++");
+        try {
+            bool gppSafe = IsGameVersionSafe_GhostsPP();
+            if (remember && gpp && !gppSafe && !gppOverridden) {
+                OverrideGhostsPP();
+                gppOverridden = true;
+            }
+            if (UI::Button("Run Anyway " + (gppSafe ? Icons::ToggleOn : Icons::ToggleOff) + "##gpp")) {
+                gpp = !gppSafe;
+                OverrideGhostsPP(gpp);
+            }
+        } catch {
+            UI::Text("Error: " + getExceptionInfo());
+        }
+#endif
+
     UI::End();
+}
+
+#if DEPENDENCY_AUTOHIDEOPPONENTS
+void OverrideAutoHideOpponents(bool safe = true) {
+    trace((safe ? "" : "de-") + "overriding Auto-hide Opponents");
+    OverrideGameSafetyCheck_AutoHideOpponents(safe);
+}
+#endif
+
+#if DEPENDENCY_GHOSTS_PP
+void OverrideGhostsPP(bool safe = true) {
+    trace((safe ? "" : "de-") + "overriding Ghosts++");
+    OverrideGameSafetyCheck_GhostsPP(safe);
+}
+#endif
+
+void Reset() {
+    trace("resetting...");
+#if DEPENDENCY_AUTOHIDEOPPONENTS
+    try {
+        OverrideAutoHideOpponents(ahoAlreadySafe);
+    } catch { }
+#endif
+
+#if DEPENDENCY_GHOSTS_PP
+    try {
+        OverrideGhostsPP(gppAlreadySafe);
+    } catch { }
+#endif
 }
