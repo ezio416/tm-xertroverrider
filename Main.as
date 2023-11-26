@@ -10,6 +10,12 @@ bool aho = false;
 string ahoVersion;
 
 [Setting hidden]
+bool epp = false;
+
+[Setting hidden]
+string eppVersion;
+
+[Setting hidden]
 bool gpp = false;
 
 [Setting hidden]
@@ -20,6 +26,9 @@ bool remember = false;
 
 bool ahoAlreadySafe = false;
 bool ahoOverridden  = false;
+
+bool eppAlreadySafe = false;
+bool eppOverridden  = false;
 
 bool gppAlreadySafe = false;
 bool gppOverridden  = false;
@@ -44,7 +53,22 @@ void Main() {
 
         ahoAlreadySafe = IsGameVersionSafe_AutoHideOpponents();
     } catch {
-        print(getExceptionInfo());
+        warn("Auto-hide Opponents: " + getExceptionInfo());
+    }
+#endif
+
+#if DEPENDENCY_EDITOR
+    try {
+        version = Meta::GetPluginFromID("Editor").Version;
+        if (eppVersion != version) {
+            if (!remember)
+                epp = false;
+            eppVersion = version;
+        }
+
+        eppAlreadySafe = IsGameVersionSafe_EditorPP();
+    } catch {
+        warn("Editor++: " + getExceptionInfo());
     }
 #endif
 
@@ -59,7 +83,7 @@ void Main() {
 
         gppAlreadySafe = IsGameVersionSafe_GhostsPP();
     } catch {
-        print(getExceptionInfo());
+        warn("Ghosts++: " + getExceptionInfo());
     }
 #endif
 
@@ -80,6 +104,11 @@ import bool IsGameVersionSafe_AutoHideOpponents() from "AutoHideOpponents";
 #endif
 
 #if DEPENDENCY_GHOSTS_PP
+import void OverrideGameSafetyCheck_EditorPP(bool safe = true) from "Editor_PP";
+import bool IsGameVersionSafe_EditorPP() from "Editor_PP";
+#endif
+
+#if DEPENDENCY_GHOSTS_PP
 import void OverrideGameSafetyCheck_GhostsPP(bool safe = true) from "Ghosts_PP";
 import bool IsGameVersionSafe_GhostsPP() from "Ghosts_PP";
 #endif
@@ -96,6 +125,8 @@ void Render() {
         if (!remember) {
             if (aho && ahoOverridden)
                 aho = false;
+            if (epp && eppOverridden)
+                epp = false;
             if (gpp && gppOverridden)
                 gpp = false;
         }
@@ -116,6 +147,25 @@ void Render() {
             if (UI::Button("Run Anyway " + (ahoSafe ? Icons::ToggleOn : Icons::ToggleOff) + "##aho")) {
                 aho = !ahoSafe;
                 OverrideAutoHideOpponents(aho);
+            }
+        } catch {
+            UI::Text("Error: " + getExceptionInfo());
+        }
+#endif
+
+#if DEPENDENCY_EDITOR
+        UI::Separator();
+        UI::Text((eppAlreadySafe ? "\\$0F0" : "") + "Editor++");
+
+        try {
+            bool eppSafe = IsGameVersionSafe_EditorPP();
+            if (remember && epp && !eppSafe && !eppOverridden) {
+                OverrideEditorPP();
+                eppOverridden = true;
+            }
+            if (UI::Button("Run Anyway " + (eppSafe ? Icons::ToggleOn : Icons::ToggleOff) + "##epp")) {
+                epp = !eppSafe;
+                OverrideEditorPP(epp);
             }
         } catch {
             UI::Text("Error: " + getExceptionInfo());
@@ -151,6 +201,13 @@ void OverrideAutoHideOpponents(bool safe = true) {
 }
 #endif
 
+#if DEPENDENCY_EDITOR
+void OverrideEditorPP(bool safe = true) {
+    trace((safe ? "" : "de-") + "overriding Editor++");
+    OverrideGameSafetyCheck_EditorPP(safe);
+}
+#endif
+
 #if DEPENDENCY_GHOSTS_PP
 void OverrideGhostsPP(bool safe = true) {
     trace((safe ? "" : "de-") + "overriding Ghosts++");
@@ -164,6 +221,12 @@ void Reset() {
 #if DEPENDENCY_AUTOHIDEOPPONENTS
     try {
         OverrideAutoHideOpponents(ahoAlreadySafe);
+    } catch { }
+#endif
+
+#if DEPENDENCY_EDITOR
+    try {
+        OverrideEditorPP(eppAlreadySafe);
     } catch { }
 #endif
 
