@@ -25,7 +25,6 @@ bool gppAlreadySafe = false;
 bool gppOverridden  = false;
 
 bool safetyPreChecked = false;
-float scale = UI::GetScale();
 string title = Icons::Repeat + " XertroVerrider";
 
 [Setting category="General" name="Enabled"]
