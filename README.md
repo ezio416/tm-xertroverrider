@@ -5,4 +5,5 @@ XertroV makes some plugins that require manual review before they work on a new 
 Currently supported plugins:
 
 - Auto-hide Opponents
+- Editor++
 - Ghosts++
