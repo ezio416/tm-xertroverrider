@@ -1,5 +1,8 @@
 [meta]
 name = "XertroVerrider"
 author = "Ezio"
-category = "Dev"
+category = "Developer"
 version = "0.1.0"
+
+[script]
+optional_dependencies = [ "AutohideOpponents", "ghosts-pp" ]
