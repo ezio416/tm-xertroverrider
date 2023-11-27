@@ -3,7 +3,6 @@ name = "XertroVerrider"
 author = "Ezio"
 category = "Developer"
 version = "0.1.0"
-siteid = 463
 
 [script]
 optional_dependencies = [ "AutohideOpponents", "Editor", "ghosts-pp" ]

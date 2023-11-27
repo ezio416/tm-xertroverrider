@@ -1,6 +1,6 @@
 /*
 c 2023-09-26
-m 2023-11-25
+m 2023-11-26
 */
 
 [Setting hidden]
@@ -118,8 +118,8 @@ void Render() {
         return;
 
     UI::Begin(title, S_Enabled, UI::WindowFlags::AlwaysAutoResize);
-        UI::TextWrapped("XertroV makes some plugins that require manual review before they work on a new game version. This is smart, but it could be annoying if you feel comfortable taking risks. Below are the plugins you have installed which do this.");
-        UI::TextWrapped("If a plugin's name is green, that means it is already safe to run on the current game version.");
+        // UI::TextWrapped("XertroV makes some plugins that require manual review before they work on a new game version. This is smart, but it could be annoying if you feel comfortable taking risks. Below are the plugins you have installed which do this.");
+        // UI::TextWrapped("If a plugin's name is green, that means it is already safe to run on the current game version.");
 
         remember = UI::Checkbox("Remember choices (unsafe)", remember);
         if (!remember) {
